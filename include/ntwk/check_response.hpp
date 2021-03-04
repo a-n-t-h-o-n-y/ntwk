@@ -3,8 +3,8 @@
 #include <string>
 #include <utility>
 
-#include "../error.hpp"
-#include "https_socket.hpp"
+#include <ntwk/error.hpp>
+#include <ntwk/https_socket.hpp>
 
 namespace ntwk {
 
@@ -16,7 +16,7 @@ void inline check_response(HTTPS_socket::Response const& message,
         return;
     auto what = "code: " + std::to_string(message.code) + '\n' + about + ": " +
                 message.body;
-    throw Crab_error{std::move(what)};
+    throw Error{std::move(what)};
 }
 
 }  // namespace ntwk

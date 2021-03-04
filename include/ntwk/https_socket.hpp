@@ -5,7 +5,7 @@
 
 #include <boost/beast/core/flat_buffer.hpp>
 
-#include "ssl.hpp"
+#include <ntwk/detail/ssl.hpp>
 
 namespace ntwk {
 
@@ -16,15 +16,15 @@ class HTTPS_socket {
 
    public:
     /// Make Connection to \p host. \p host should have 'www.' prefix.
-    /** Throws Crab_error if fails. */
+    /** Throws Error if fails. */
     void connect(std::string const& host);
 
     /// Disconnect from endpoint. No-op if already disconnected.
-    /** Throws Crab_error if fails. */
+    /** Throws Error if fails. */
     void disconnect();
 
     /// Reconnects to host given in last connect() call.
-    /** Throws Crab_error if fails. */
+    /** Throws Error if fails. */
     void reconnect();
 
     /// HTTP Response, includes return code and string contents of body.
@@ -44,13 +44,13 @@ class HTTPS_socket {
     }
 
    private:
-    Context_t ssl_ctx_{make_context()};
+    detail::Context_t ssl_ctx_{detail::make_context()};
 
-    std::unique_ptr<SSL_socket_t> socket_{nullptr};
+    std::unique_ptr<detail::SSL_socket_t> socket_{nullptr};
 
     boost::beast::flat_buffer buffer_;
     std::string host_;
 };
 
-}  // namespace crab
+}  // namespace ntwk
 #endif  // NTWK_HTTPS_SOCKET_HPP

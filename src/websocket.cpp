@@ -16,35 +16,35 @@
 #include <boost/beast/websocket/ssl.hpp>
 #include <boost/system/system_error.hpp>
 
-#include "../error.hpp"
-#include "io_context.hpp"
-#include "ssl.hpp"
+#include <ntwk/detail/io_context.hpp>
+#include <ntwk/detail/ssl.hpp>
+#include <ntwk/error.hpp>
 
 namespace {
 using namespace ntwk;
 
-using Socket_t = boost::beast::websocket::stream<SSL_socket_t>;
+using Socket_t = boost::beast::websocket::stream<detail::SSL_socket_t>;
 
 /// Connect the lowest layer socket to \p host, \p port.
-/** throws Crab_error if fails. */
+/** throws Error if fails. */
 void make_connection(Socket_t& socket,
                      std::string const& host,
                      std::string const& port)
 {
     try {
-        auto resolver     = boost::asio::ip::tcp::resolver{io_context()};
+        auto resolver = boost::asio::ip::tcp::resolver{detail::io_context()};
         auto const result = resolver.resolve(host, port);
         boost::asio::connect(socket.next_layer().next_layer(),
                              std::begin(result), std::end(result));
     }
     catch (std::exception const& e) {
-        throw Crab_error{"websocket.cpp anon::make_connection()" +
-                         std::string{e.what()}};
+        throw Error{"websocket.cpp anon::make_connection()" +
+                    std::string{e.what()}};
     }
 }
 
 /// Perform websocket handshake.
-/** throws Crab_error if fails. */
+/** throws Error if fails. */
 void ws_handshake(Socket_t& socket,
                   std::string const& host,
                   std::string const& URI)
@@ -53,8 +53,8 @@ void ws_handshake(Socket_t& socket,
         socket.handshake(host, URI);
     }
     catch (std::exception const& e) {
-        throw Crab_error{"websocket.cpp anon::ws_handshake()" +
-                         std::string{e.what()}};
+        throw Error{"websocket.cpp anon::ws_handshake()" +
+                    std::string{e.what()}};
     }
 }
 }  // namespace
@@ -65,9 +65,9 @@ void Websocket::connect(std::string const& host,
                         std::string const& URI,
                         std::string const& port)
 {
-    set_hostname(socket_->next_layer(), host);
+    detail::set_hostname(socket_->next_layer(), host);
     make_connection(*socket_, host, port);
-    handshake(socket_->next_layer());
+    detail::handshake(socket_->next_layer());
     ws_handshake(*socket_, host, URI);
     connected_ = true;
 }
@@ -81,7 +81,7 @@ void Websocket::disconnect()
         // Expected to throw, for some reason this is always going to happen.
     }
     // Replace socket with new socket. Clean disconnect is impossible.
-    socket_    = std::make_unique<Socket_t>(io_context(), ssl_ctx_);
+    socket_    = std::make_unique<Socket_t>(detail::io_context(), ssl_ctx_);
     connected_ = false;
 }
 
@@ -91,7 +91,7 @@ void Websocket::write(std::string const& request)
         socket_->write(boost::asio::buffer(request));
     }
     catch (std::exception const& e) {
-        throw Crab_error{"Websocket::write()" + std::string{e.what()}};
+        throw Error{"Websocket::write()" + std::string{e.what()}};
     }
 }
 
@@ -105,7 +105,7 @@ auto Websocket::read() -> std::string
         return oss.str();
     }
     catch (std::exception const& e) {
-        throw Crab_error{"Websocket::read()" + std::string{e.what()}};
+        throw Error{"Websocket::read()" + std::string{e.what()}};
     }
 }
 

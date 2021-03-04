@@ -9,8 +9,9 @@
 #include <boost/asio/ssl/stream_base.hpp>
 #include <boost/asio/ssl/verify_mode.hpp>
 
-#include "../error.hpp"
+#include <ntwk/error.hpp>
 
+// TODO change names to mention ssl
 namespace ntwk::detail {
 
 using Context_t    = boost::asio::ssl::context;
@@ -32,14 +33,14 @@ inline auto make_context() -> Context_t
 }
 
 /// Perform SSL handshake as client.
-/** throws Crab_error on failure. */
+/** throws Error on failure. */
 inline void handshake(SSL_socket_t& socket)
 {
     try {
         socket.handshake(boost::asio::ssl::stream_base::client);
     }
     catch (std::exception const& e) {
-        throw Crab_error{std::string{"network::ssl::handshake: "} + e.what()};
+        throw Error{std::string{"network::ssl::handshake: "} + e.what()};
     }
 }
 
