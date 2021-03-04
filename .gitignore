@@ -1,0 +1,10 @@
+build*/
+out.*/
+tags
+.clangd/
+.cache/
+*.[ao]
+*.so
+*.out
+*.json
+*.vim
