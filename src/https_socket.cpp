@@ -37,7 +37,7 @@ void HTTPS_socket::connect(std::string const& host)
     auto const endpoints = resolver.resolve(host, "443");
     boost::asio::connect(temp_sock->next_layer(), std::cbegin(endpoints),
                          std::cend(endpoints));
-    detail::handshake(*temp_sock);
+    detail::ssl_handshake(*temp_sock);
     host_   = host;
     socket_ = std::move(temp_sock);
 }

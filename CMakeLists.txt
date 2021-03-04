@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 project(NTWK LANGUAGES CXX)
 
-# Networking and Markets
 add_library(ntwk STATIC
     src/websocket.cpp
     src/https_socket.cpp

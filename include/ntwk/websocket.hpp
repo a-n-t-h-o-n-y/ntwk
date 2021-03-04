@@ -14,28 +14,29 @@ namespace ntwk {
 class Websocket {
    public:
     /// Perform connect, ssl handshake and websocket handshake.
-    /** throws Error if fails. */
+    /** throws ntwk::Error if fails. */
     void connect(std::string const& host,
                  std::string const& URI  = "/",
                  std::string const& port = "443");
 
     /// Safely disconnect the socket.
-    /** throws Error if fails. */
+    /** throws ntwk::Error if fails. */
     void disconnect();
 
+    /// Return true if connect has been called and disconnect has not.
+    [[nodiscard]] auto is_connected() const -> bool { return connected_; }
+
+   public:
     /// Send \p request to the socket.
-    /** throws Error if fails. */
+    /** throws ntwk::Error if fails. */
     void write(std::string const& request);
 
     /// Perform one read from the socket, returning the read bytes.
     /** throws Error if fails. */
     [[nodiscard]] auto read() -> std::string;
 
-    /// Return true if connect has been called and disconnect has not.
-    [[nodiscard]] auto is_connected() const -> bool { return connected_; }
-
    private:
-    detail::Context_t ssl_ctx_ = detail::make_context();
+    detail::SSL_context_t ssl_ctx_ = detail::make_ssl_context();
 
     using Socket_t = boost::beast::websocket::stream<detail::SSL_socket_t>;
     std::unique_ptr<Socket_t> socket_ =

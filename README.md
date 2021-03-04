@@ -1,4 +1,6 @@
 # NTWK 🦆
 
 Simple wrapper over boost asio and boost beast for https sockets and websockets.
-Hides the boost and openssl dependency and builds static libraries.
+
+CMake is set up to build static libraries with boost and openssl being
+statically linked as well.

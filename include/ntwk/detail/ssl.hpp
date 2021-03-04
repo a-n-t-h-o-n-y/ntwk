@@ -11,11 +11,10 @@
 
 #include <ntwk/error.hpp>
 
-// TODO change names to mention ssl
 namespace ntwk::detail {
 
-using Context_t    = boost::asio::ssl::context;
-using SSL_socket_t = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
+using SSL_context_t = boost::asio::ssl::context;
+using SSL_socket_t  = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
 
 inline auto set_hostname(SSL_socket_t& socket, std::string const& host) -> bool
 {
@@ -23,10 +22,11 @@ inline auto set_hostname(SSL_socket_t& socket, std::string const& host) -> bool
 }
 
 /// Create a new SSL_context object, with verification method set.
-inline auto make_context() -> Context_t
+inline auto make_ssl_context() -> SSL_context_t
 {
-    auto context = Context_t{Context_t::sslv23_client};
-    context.set_options(Context_t::default_workarounds | Context_t::no_sslv3);
+    auto context = SSL_context_t{SSL_context_t::sslv23_client};
+    context.set_options(SSL_context_t::default_workarounds |
+                        SSL_context_t::no_sslv3);
     context.set_verify_mode(boost::asio::ssl::verify_peer);
     context.set_default_verify_paths();
     return context;
@@ -34,7 +34,7 @@ inline auto make_context() -> Context_t
 
 /// Perform SSL handshake as client.
 /** throws Error on failure. */
-inline void handshake(SSL_socket_t& socket)
+inline void ssl_handshake(SSL_socket_t& socket)
 {
     try {
         socket.handshake(boost::asio::ssl::stream_base::client);

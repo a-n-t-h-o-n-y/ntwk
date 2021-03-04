@@ -67,7 +67,7 @@ void Websocket::connect(std::string const& host,
 {
     detail::set_hostname(socket_->next_layer(), host);
     make_connection(*socket_, host, port);
-    detail::handshake(socket_->next_layer());
+    detail::ssl_handshake(socket_->next_layer());
     ws_handshake(*socket_, host, URI);
     connected_ = true;
 }
