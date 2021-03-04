@@ -14,8 +14,9 @@ set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL REQUIRED)
 
 target_link_libraries(ntwk
-    PRIVATE
+    PUBLIC
         Boost::system
+    PRIVATE
         OpenSSL::Crypto
         OpenSSL::SSL
 )
