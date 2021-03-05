@@ -38,7 +38,7 @@ void make_connection(Socket_t& socket,
                              std::begin(result), std::end(result));
     }
     catch (std::exception const& e) {
-        throw Error{"websocket.cpp anon::make_connection()" +
+        throw Error{"websocket.cpp anon::make_connection() failed: " +
                     std::string{e.what()}};
     }
 }
@@ -53,7 +53,7 @@ void ws_handshake(Socket_t& socket,
         socket.handshake(host, URI);
     }
     catch (std::exception const& e) {
-        throw Error{"websocket.cpp anon::ws_handshake()" +
+        throw Error{"websocket.cpp anon::ws_handshake() failed: " +
                     std::string{e.what()}};
     }
 }
@@ -67,7 +67,14 @@ void Websocket::connect(std::string const& host,
 {
     detail::set_hostname(socket_->next_layer(), host);
     make_connection(*socket_, host, port);
-    detail::ssl_handshake(socket_->next_layer());
+    try {
+        detail::ssl_handshake(socket_->next_layer());
+    }
+    catch (ntwk::Error const& e) {
+        throw ntwk::Error{
+            "Websocket::connect(): ssl handshake failed for\nhost: " + host +
+            "\nURI: " + URI + "\nport: " + port + '\n' + e.what()};
+    }
     ws_handshake(*socket_, host, URI);
     connected_ = true;
 }
@@ -91,7 +98,7 @@ void Websocket::write(std::string const& request)
         socket_->write(boost::asio::buffer(request));
     }
     catch (std::exception const& e) {
-        throw Error{"Websocket::write()" + std::string{e.what()}};
+        throw Error{"Websocket::write() failed: " + std::string{e.what()}};
     }
 }
 
@@ -105,7 +112,7 @@ auto Websocket::read() -> std::string
         return oss.str();
     }
     catch (std::exception const& e) {
-        throw Error{"Websocket::read()" + std::string{e.what()}};
+        throw Error{"Websocket::read() failed: " + std::string{e.what()}};
     }
 }
 

@@ -22,22 +22,29 @@ namespace ntwk {
 
 void HTTPS_socket::connect(std::string const& host)
 {
+    using tcp = boost::asio::ip::tcp;
+
     if (socket_ != nullptr)
-        throw Error{"HTTPS_socket::connect: socket_ is null."};
+        return;
 
     auto temp_sock =
         std::make_unique<detail::SSL_socket_t>(detail::io_context(), ssl_ctx_);
 
     if (!SSL_set_tlsext_host_name(temp_sock->native_handle(), host.c_str()))
-        throw Error{"HTTPS_socket::connect: set_tlsext failed."};
-
-    using tcp = boost::asio::ip::tcp;
+        throw ntwk::Error{"HTTPS_socket::connect(): set_tlsext failed."};
 
     auto resolver        = tcp::resolver{detail::io_context()};
     auto const endpoints = resolver.resolve(host, "443");
     boost::asio::connect(temp_sock->next_layer(), std::cbegin(endpoints),
                          std::cend(endpoints));
-    detail::ssl_handshake(*temp_sock);
+    try {
+        detail::ssl_handshake(*temp_sock);
+    }
+    catch (ntwk::Error const& e) {
+        throw ntwk::Error{
+            "HTTPS_socket::connect(): ssl handshake failed for host: " + host +
+            '\n' + e.what()};
+    }
     host_   = host;
     socket_ = std::move(temp_sock);
 }
@@ -49,9 +56,8 @@ void HTTPS_socket::disconnect()
     {
         auto status = boost::system::error_code{};
         socket_->lowest_layer().cancel(status);
-        if (status.failed()) {
+        if (status.failed())
             throw Error{"HTTPS_socket::disconnect(): " + status.message()};
-        }
     }
     {
         auto status = boost::system::error_code{};
@@ -76,7 +82,7 @@ void HTTPS_socket::reconnect()
 auto HTTPS_socket::get(std::string const& resource) -> Response
 {
     if (socket_ == nullptr)
-        throw Error{"HTTP_socket::send: Not Connected."};
+        throw Error{"HTTP_socket::get(): Not Connected."};
 
     namespace http = boost::beast::http;
     auto req = http::request<http::string_body>{http::verb::get, resource, 11};
@@ -92,8 +98,8 @@ auto HTTPS_socket::get(std::string const& resource) -> Response
         ++count;
         if (!ec.failed())
             break;
-        if (count == 5)
-            throw Error{"HTTPS_socket::get: Failed with 5 attempts."};
+        if (count == 3)
+            throw Error{"HTTPS_socket::get(): Failed with 3 attempts."};
         this->reconnect();
     };
 

@@ -40,7 +40,7 @@ inline void ssl_handshake(SSL_socket_t& socket)
         socket.handshake(boost::asio::ssl::stream_base::client);
     }
     catch (std::exception const& e) {
-        throw Error{std::string{"network::ssl::handshake: "} + e.what()};
+        throw Error{std::string{"ntwk::ssl_handshake failed: "} + e.what()};
     }
 }
 

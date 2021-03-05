@@ -40,6 +40,8 @@ class HTTPS_socket {
 
    public:
     /// Send GET HTTP message to \p resource at endpoint. Return body.
+    /** throws ntwk::Error if fails. Auto reconnects up to three times if fails
+     *  to send. */
     auto get(std::string const& resource) -> Response;
 
    private:
