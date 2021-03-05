@@ -23,16 +23,19 @@ class Websocket {
     /** throws ntwk::Error if fails. */
     void disconnect();
 
+    /// Reconnect to the previously connected endpoint.
+    void reconnect();
+
     /// Return true if connect has been called and disconnect has not.
     [[nodiscard]] auto is_connected() const -> bool { return connected_; }
 
    public:
     /// Send \p request to the socket.
-    /** throws ntwk::Error if fails. */
+    /** throws ntwk::Error if fails. Auto Reconnects if websocket has closed. */
     void write(std::string const& request);
 
     /// Perform one read from the socket, returning the read bytes.
-    /** throws Error if fails. */
+    /** throws ntwk::Error if fails. Auto Reconnects if websocket has closed. */
     [[nodiscard]] auto read() -> std::string;
 
    private:
@@ -42,6 +45,9 @@ class Websocket {
     std::unique_ptr<Socket_t> socket_ =
         std::make_unique<Socket_t>(detail::io_context(), ssl_ctx_);
 
+    std::string host_;
+    std::string uri_;
+    std::string port_;
     bool connected_ = false;
 };
 

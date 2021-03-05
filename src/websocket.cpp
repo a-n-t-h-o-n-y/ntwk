@@ -77,6 +77,9 @@ void Websocket::connect(std::string const& host,
     }
     ws_handshake(*socket_, host, URI);
     connected_ = true;
+    host_      = host;
+    uri_       = URI;
+    port_      = port;
 }
 
 void Websocket::disconnect()
@@ -85,7 +88,7 @@ void Websocket::disconnect()
         socket_->close(boost::beast::websocket::close_code::normal);
     }
     catch (boost::system::system_error const&) {
-        // Expected to throw, for some reason this is always going to happen.
+        // Expected to throw, since servers expect to disconnect, not clients.
     }
     // Replace socket with new socket. Clean disconnect is impossible.
     socket_    = std::make_unique<Socket_t>(detail::io_context(), ssl_ctx_);
@@ -94,7 +97,11 @@ void Websocket::disconnect()
 
 void Websocket::write(std::string const& request)
 {
+    if (!connected_)
+        throw Error{"ntwk::Websocket::write(): Websocket not connected yet."};
     try {
+        if (!socket_->is_open())
+            this->reconnect();
         socket_->write(boost::asio::buffer(request));
     }
     catch (std::exception const& e) {
@@ -104,8 +111,12 @@ void Websocket::write(std::string const& request)
 
 auto Websocket::read() -> std::string
 {
+    if (!connected_)
+        throw Error{"ntwk::Websocket::read(): Websocket not connected yet."};
     try {
         auto buf = boost::beast::multi_buffer{};
+        if (!socket_->is_open())
+            this->reconnect();
         socket_->read(buf);
         auto oss = std::ostringstream{};
         oss << boost::beast::buffers_to_string(buf.data());
@@ -114,6 +125,12 @@ auto Websocket::read() -> std::string
     catch (std::exception const& e) {
         throw Error{"Websocket::read() failed: " + std::string{e.what()}};
     }
+}
+
+void Websocket::reconnect()
+{
+    this->disconnect();
+    this->connect(host_, uri_, port_);
 }
 
 }  // namespace ntwk
