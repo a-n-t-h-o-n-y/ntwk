@@ -27,6 +27,7 @@ class Websocket {
     void reconnect();
 
     /// Return true if connect has been called and disconnect has not.
+    /** Tries to be accurate in setting false when an exception is thrown. */
     [[nodiscard]] auto is_connected() const -> bool { return connected_; }
 
    public:

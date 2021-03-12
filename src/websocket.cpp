@@ -38,8 +38,8 @@ void make_connection(Socket_t& socket,
                              std::begin(result), std::end(result));
     }
     catch (std::exception const& e) {
-        throw Error{"websocket.cpp anon::make_connection() failed: " +
-                    std::string{e.what()}};
+        throw ntwk::Error{"websocket.cpp anon::make_connection() failed: " +
+                          std::string{e.what()}};
     }
 }
 
@@ -65,12 +65,15 @@ void Websocket::connect(std::string const& host,
                         std::string const& URI,
                         std::string const& port)
 {
+    if (connected_)
+        throw ntwk::Error{"Websocket::connect(...): Already Connected.\n"};
     detail::set_hostname(socket_->next_layer(), host);
     make_connection(*socket_, host, port);
     try {
         detail::ssl_handshake(socket_->next_layer());
     }
     catch (ntwk::Error const& e) {
+        connected_ = false;
         throw ntwk::Error{
             "Websocket::connect(): ssl handshake failed for\nhost: " + host +
             "\nURI: " + URI + "\nport: " + port + '\n' + e.what()};
@@ -98,13 +101,14 @@ void Websocket::disconnect()
 void Websocket::write(std::string const& request)
 {
     if (!connected_)
-        throw Error{"ntwk::Websocket::write(): Websocket not connected yet."};
+        throw Error{"ntwk::Websocket::write(): Websocket not connected."};
     try {
         if (!socket_->is_open())
             this->reconnect();
         socket_->write(boost::asio::buffer(request));
     }
     catch (std::exception const& e) {
+        connected_ = false;
         throw Error{"Websocket::write() failed: " + std::string{e.what()}};
     }
 }
@@ -112,7 +116,7 @@ void Websocket::write(std::string const& request)
 auto Websocket::read() -> std::string
 {
     if (!connected_)
-        throw Error{"ntwk::Websocket::read(): Websocket not connected yet."};
+        throw Error{"ntwk::Websocket::read(): Websocket not connected."};
     try {
         auto buf = boost::beast::multi_buffer{};
         if (!socket_->is_open())
@@ -123,6 +127,7 @@ auto Websocket::read() -> std::string
         return oss.str();
     }
     catch (std::exception const& e) {
+        connected_ = false;
         throw Error{"Websocket::read() failed: " + std::string{e.what()}};
     }
 }
