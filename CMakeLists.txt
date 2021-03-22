@@ -7,12 +7,8 @@ add_library(ntwk STATIC
 )
 
 # Find Dependencies
-set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.66 REQUIRED COMPONENTS system)
-
-set(OPENSSL_USE_STATIC_LIBS TRUE)
 find_package(OpenSSL REQUIRED)
-
 find_package(ZLIB)
 
 target_link_libraries(ntwk
